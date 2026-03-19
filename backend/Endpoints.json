@@ -1,0 +1,185 @@
+{
+    "project": "META-S",
+    "version": "1.0.0",
+    "description": "Resource-Constrained Multi-Agent Email Triage System (4GB VRAM Optimized)",
+    "base_path": "/api/v1",
+    "authentication": {
+        "type": "JWT Bearer Token",
+        "header": "Authorization: Bearer <access_token>"
+    },
+    "endpoints": [
+        {
+            "name": "Register User",
+            "method": "POST",
+            "path": "/auth/register",
+            "auth_required": false,
+            "request_schema": {
+                "email": {
+                    "type": "string",
+                    "format": "email",
+                    "required": true
+                },
+                "password": {
+                    "type": "string",
+                    "min_length": 8,
+                    "required": true
+                }
+            },
+            "response_schema": {
+                "user_id": "UUID",
+                "email": "string",
+                "created_at": "datetime"
+            }
+        },
+        {
+            "name": "Login User",
+            "method": "POST",
+            "path": "/auth/login",
+            "auth_required": false,
+            "request_schema": {
+                "email": {
+                    "type": "string",
+                    "required": true
+                },
+                "password": {
+                    "type": "string",
+                    "required": true
+                }
+            },
+            "response_schema": {
+                "access_token": "string",
+                "refresh_token": "string",
+                "token_type": "string",
+                "expires_in": "integer"
+            }
+        },
+        {
+            "name": "Email Triage",
+            "method": "POST",
+            "path": "/emails/triage",
+            "auth_required": true,
+            "request_schema": {
+                "subject": {
+                    "type": "string",
+                    "required": false
+                },
+                "body": {
+                    "type": "string",
+                    "required": true
+                },
+                "force_reflection": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "max_reflections": {
+                    "type": "integer",
+                    "default": 2,
+                    "maximum": 2
+                }
+            },
+            "response_schema": {
+                "email_id": "UUID",
+                "classification": "string",
+                "final_draft": "string",
+                "reflection_count": "integer",
+                "reflection_scores": "integer[]",
+                "approved": "boolean",
+                "usage": {
+                    "input_tokens": "integer",
+                    "output_tokens": "integer",
+                    "total_tokens": "integer",
+                    "latency_ms": "integer"
+                }
+            }
+        },
+        {
+            "name": "Get Draft History",
+            "method": "GET",
+            "path": "/emails/{email_id}/drafts",
+            "auth_required": true,
+            "path_parameters": {
+                "email_id": "UUID"
+            },
+            "response_schema": {
+                "email_id": "UUID",
+                "drafts": [
+                    {
+                        "version": "integer",
+                        "content": "string",
+                        "reflection_score": "integer",
+                        "approved": "boolean",
+                        "created_at": "datetime"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Add RAG Document",
+            "method": "POST",
+            "path": "/rag/documents",
+            "auth_required": true,
+            "request_schema": {
+                "title": {
+                    "type": "string",
+                    "required": true
+                },
+                "content": {
+                    "type": "string",
+                    "required": true
+                }
+            },
+            "response_schema": {
+                "document_id": "UUID",
+                "embedding_id": "string",
+                "created_at": "datetime"
+            }
+        },
+        {
+            "name": "List RAG Documents",
+            "method": "GET",
+            "path": "/rag/documents",
+            "auth_required": true,
+            "response_schema": {
+                "documents": [
+                    {
+                        "document_id": "UUID",
+                        "title": "string",
+                        "created_at": "datetime"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "System Metrics",
+            "method": "GET",
+            "path": "/metrics",
+            "auth_required": true,
+            "response_schema": {
+                "total_emails_processed": "integer",
+                "average_reflection_count": "float",
+                "average_latency_ms": "float",
+                "average_tokens_per_email": "float",
+                "approval_rate": "float"
+            }
+        },
+        {
+            "name": "Health Check",
+            "method": "GET",
+            "path": "/health",
+            "auth_required": false,
+            "response_schema": {
+                "status": "string",
+                "model_loaded": "boolean",
+                "vector_store_status": "string",
+                "uptime_seconds": "integer"
+            }
+        }
+    ],
+    "error_schema": {
+        "error": {
+            "code": "integer",
+            "message": "string",
+            "details": "string"
+        }
+    }
+}
